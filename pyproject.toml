@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "ta"
+version = "0.1.0"
+description = ""
+authors = ["Toan Phung <toan.phung@proteo.info>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+django = "^4.2.6"
+psycopg2 = "^2.9.9"
+djangorestframework = "^3.14.0"
+django-postgres-extra = "^2.0.8"
+drf-url-filters = "^0.5.1"
+pandas = "^2.1.1"
+django-filter = "^23.3"
+django-cors-headers = "^4.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

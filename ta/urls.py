@@ -19,7 +19,8 @@ from django.urls import path, include
 from rest_framework import routers
 from turnover_atlas.viewsets import TurnoverAtlasDataViewSets, TurnoverAtlasDataValueViewSets, AccessionIDMapViewSets, \
     SampleGroupMetadataViewSets
-from turnover_atlas.views import AvailableTissues
+from turnover_atlas.views import AvailableTissues, ModelData
+
 router = routers.DefaultRouter()
 
 router.register(r'api/turnoverdata', TurnoverAtlasDataViewSets)
@@ -29,6 +30,6 @@ router.register(r'api/samplegroupmetadata', SampleGroupMetadataViewSets)
 urlpatterns = [
     path('', include(router.urls)),
     path('api/tissue/', AvailableTissues.as_view(), name='tissue'),
+    path('api/modelling/', ModelData.as_view(), name='modelling'),
     path('admin/', admin.site.urls),
-
 ]

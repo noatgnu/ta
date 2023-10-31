@@ -105,3 +105,17 @@ class SampleGroupMetadata(models.Model):
     class Meta:
         app_label = "turnover_atlas"
         ordering = ["id"]
+
+class ModelParameters(models.Model):
+    a = models.FloatField(blank=False, null=False)
+    b = models.FloatField(blank=False, null=False)
+    r = models.FloatField(blank=False, null=False)
+    n = models.FloatField(blank=False, null=False)
+    eps = models.FloatField(blank=False, null=False)
+    min = models.FloatField(blank=False, null=False)
+    Engine = models.TextField(blank=False, null=False)
+    Tissue = models.TextField(blank=False, null=False)
+
+    class Meta:
+        app_label = "turnover_atlas"
+        ordering = ["id"]

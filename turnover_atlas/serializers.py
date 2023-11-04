@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata
+from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters
 
 
 class TurnoverDataSerializer(serializers.ModelSerializer):
@@ -40,6 +40,7 @@ class TurnoverDataSerializer(serializers.ModelSerializer):
             'Engine',
             'Tissue',
             'values',
+            'tau_model',
         )
 
 class TurnoverDataValueSerializer(serializers.ModelSerializer):
@@ -73,4 +74,20 @@ class SampleGroupMetadataSerializer(serializers.ModelSerializer):
             'Sample_Label',
             'Days',
             'Replicate'
+        )
+
+class ModelParametersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModelParameters
+        fields = (
+            'id',
+            'a',
+            'b',
+            'r',
+            'n',
+            'eps',
+            'min',
+            'Engine',
+            'Tissue',
+            'k_pool'
         )

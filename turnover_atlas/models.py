@@ -36,10 +36,10 @@ class TurnoverData(models.Model):
 
     """
 
-    Protein_Group = models.TextField(blank=True, null=True)
+    Protein_Group = models.TextField(blank=False, null=False, db_index=True)
     Protein_Ids = models.TextField(blank=True, null=True)
     Protein_Names = models.TextField(blank=True, null=True)
-    Genes = models.TextField(blank=True, null=True)
+    Genes = models.TextField(blank=False, null=False, db_index=True)
     Proteotypic = models.IntegerField(blank=True, null=True)
     Stripped_Sequence = models.TextField(blank=True, null=True)
     Modified_Sequence = models.TextField(blank=True, null=True)
@@ -61,6 +61,7 @@ class TurnoverData(models.Model):
     AverageRSS = models.FloatField(blank=True, null=True)
     Engine = models.TextField(blank=True, null=True)
     Tissue = models.TextField(blank=True, null=True)
+    tau_model = models.JSONField(blank=True, null=True)
 
     class Meta:
         ordering = ["id"]
@@ -115,6 +116,7 @@ class ModelParameters(models.Model):
     min = models.FloatField(blank=False, null=False)
     Engine = models.TextField(blank=False, null=False)
     Tissue = models.TextField(blank=False, null=False)
+    k_pool = models.JSONField(blank=True, null=True)
 
     class Meta:
         app_label = "turnover_atlas"

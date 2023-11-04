@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from filters.mixins import FiltersMixin
 from rest_framework import viewsets, permissions, renderers, pagination, filters
@@ -10,7 +12,7 @@ from turnover_atlas import pagination as tpagination
 from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters
 from turnover_atlas.ordering_filter import CustomOrderingFilter
 from turnover_atlas.serializers import TurnoverDataSerializer, TurnoverDataValueSerializer, AccessionIDMapSerializer, \
-    SampleGroupMetadataSerializer
+    SampleGroupMetadataSerializer, ModelParametersSerializer
 from turnover_atlas.utils import func_kpool, func_pulse
 from turnover_atlas.validation import turnover_data_schema, accession_id_map_schema
 
@@ -44,6 +46,13 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
             queryset = queryset.order_by(self.request.query_params.get('distinct', None)).distinct(self.request.query_params.get('distinct', None))
         return queryset
 
+    @method_decorator(cache_page(60 * 60 * 24 * 7))
+    @action(detail=False, methods=['get'])
+    def get_all_from_queryset(self, request, pk=None):
+        queryset = self.get_queryset()
+        json_data = TurnoverDataSerializer(queryset, many=True).data
+        return Response(json_data)
+
     @action(detail=True, methods=['get'])
     def values(self, request, pk=None):
         data = self.get_object()
@@ -55,8 +64,6 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
     def get_modelling_data(self, request, pk=None):
         filter_ids = self.request.data["ids"]
         turnover_data = TurnoverData.objects.filter(tau_POI__isnull=False, id__in=filter_ids)
-
-
         results = []
         for i in turnover_data:
             engine = i.Engine
@@ -73,6 +80,10 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
                         s = SampleGroupMetadata.objects.get(Sample_Name=i2.Sample_Name)
                         if s.Days not in available_days and s.Days in days:
                             available_days.append(s.Days)
+                if 0 not in available_days:
+                    available_days.append(0)
+                if 50 not in available_days:
+                    available_days.append(50)
                 available_days.sort()
                 for d in available_days:
                     day = d
@@ -126,3 +137,16 @@ class SampleGroupMetadataViewSets(FiltersMixin, viewsets.ModelViewSet):
 
 
     pagination_class = tpagination.CursorPage
+
+
+class ModelParametersViewSets(FiltersMixin, viewsets.ModelViewSet):
+    queryset = ModelParameters.objects.all()
+    serializer_class = ModelParametersSerializer
+    permission_classes = (permissions.AllowAny,)
+    filter_backends = (filters.OrderingFilter,)
+    ordering_fields = ('id', 'Engine', 'Tissue')
+    ordering = ('id',)
+    filter_mappings = {
+        "Engine": "Engine__exact",
+        "Tissue": "Tissue__exact",
+    }

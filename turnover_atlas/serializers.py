@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters
+from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters, \
+    ProteinSequence
 
 
 class TurnoverDataSerializer(serializers.ModelSerializer):
@@ -90,4 +91,13 @@ class ModelParametersSerializer(serializers.ModelSerializer):
             'Engine',
             'Tissue',
             'k_pool'
+        )
+
+class ProteinSequenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProteinSequence
+        fields = (
+            'id',
+            'AccessionID',
+            'Sequence',
         )

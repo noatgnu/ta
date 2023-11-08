@@ -121,3 +121,15 @@ class ModelParameters(models.Model):
     class Meta:
         app_label = "turnover_atlas"
         ordering = ["id"]
+
+
+class ProteinSequence(models.Model):
+    """
+    A Model to store protein sequences with a column storing uniprot id and another storing the sequence
+    """
+    AccessionID = models.TextField(blank=False, null=False, db_index=True)
+    Sequence = models.TextField(blank=False, null=False)
+
+    class Meta:
+        app_label = "turnover_atlas"
+        ordering = ["AccessionID"]

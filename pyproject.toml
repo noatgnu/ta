@@ -15,6 +15,7 @@ drf-url-filters = "^0.5.1"
 pandas = "^2.1.1"
 django-filter = "^23.3"
 django-cors-headers = "^4.3.0"
+uniprotparser = "^1.1.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -4,15 +4,16 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from filters.mixins import FiltersMixin
-from rest_framework import viewsets, permissions, renderers, pagination, filters
+from rest_framework import viewsets, permissions, renderers, pagination, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from turnover_atlas import pagination as tpagination
-from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters
+from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters, \
+    ProteinSequence
 from turnover_atlas.ordering_filter import CustomOrderingFilter
 from turnover_atlas.serializers import TurnoverDataSerializer, TurnoverDataValueSerializer, AccessionIDMapSerializer, \
-    SampleGroupMetadataSerializer, ModelParametersSerializer
+    SampleGroupMetadataSerializer, ModelParametersSerializer, ProteinSequenceSerializer
 from turnover_atlas.utils import func_kpool, func_pulse
 from turnover_atlas.validation import turnover_data_schema, accession_id_map_schema
 
@@ -150,3 +151,44 @@ class ModelParametersViewSets(FiltersMixin, viewsets.ModelViewSet):
         "Engine": "Engine__exact",
         "Tissue": "Tissue__exact",
     }
+
+
+class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
+    queryset = ProteinSequence.objects.all()
+    serializer_class = ProteinSequenceSerializer
+    permission_classes = (permissions.AllowAny,)
+    filter_backends = (filters.OrderingFilter,)
+    ordering_fields = ('id', 'AccessionID')
+    ordering = ('AccessionID',)
+    filter_mappings = {
+        "AccessionID": "AccessionID__exact",
+    }
+
+    def get_queryset(self):
+        return ProteinSequence.objects.all()
+
+    @action(detail=False, methods=['get'])
+    #@method_decorator(cache_page(60 * 60 * 24 * 7))
+    def get_coverage(self, request, pk=None):
+        valid_tau = self.request.query_params.get('valid_tau', None)
+
+        protein_sequence = ProteinSequence.objects.get(AccessionID=self.request.query_params.get('AccessionID', None))
+        if protein_sequence is not None:
+            if valid_tau is not None:
+                turnover_data = TurnoverData.objects.filter(Protein_Group=protein_sequence.AccessionID, tau_POI__isnull=False)
+            else:
+                turnover_data = TurnoverData.objects.filter(Protein_Group=protein_sequence.AccessionID)
+            a = sorted(turnover_data, key=lambda x: len(x.Stripped_Sequence), reverse=True)
+            pos_dict = {}
+            for i in a:
+                i2 = protein_sequence.Sequence.index(i.Stripped_Sequence)
+                for i3 in range(len(i.Stripped_Sequence)):
+                    if i2+i3 not in pos_dict:
+                        pos_dict[i2+i3] = []
+                    pos_dict[i2+i3].append(i.id)
+            data = {}
+            for i in turnover_data:
+                data[i.id] = {"id": i.id, "Precursor_Id": i.Precursor_Id, "Tissue": i.Tissue, "Engine": i.Engine, "tau_POI": i.tau_POI, "Stripped_Sequence": i.Stripped_Sequence}
+            return Response({"coverage": pos_dict, "turnover_data": data, "protein_sequence": protein_sequence.Sequence})
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)

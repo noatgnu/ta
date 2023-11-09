@@ -122,6 +122,15 @@ class AccessionIDMapViewSets(FiltersMixin, viewsets.ModelViewSet):
         return queryset
 
     @action(detail=False, methods=['get'])
+    def get_exact_accession_id_from_genes(self, request, pk=None):
+        genes = self.request.query_params.get('genes', None)
+        if genes is not None:
+            queryset = self.get_queryset()
+            result = queryset.filter(Genes__exact=genes).values_list('Protein_Group', flat=True).distinct()
+            return Response(result)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'])
     def get_distinct(self, request, pk=None):
         queryset = self.get_queryset()
         result = queryset.values_list(self.request.query_params.get('distinct', None), flat=True).distinct()

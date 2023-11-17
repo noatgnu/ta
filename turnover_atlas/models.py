@@ -1,5 +1,4 @@
 from django.db import models
-from psqlextra.types import PostgresPartitioningMethod
 
 
 class TurnoverData(models.Model):

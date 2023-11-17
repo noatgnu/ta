@@ -20,13 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0)uegopfs@ni$7v!*p4(p$kjskmv8^hwa%8@%i83e@f%tzec0c'
+SECRET_KEY = os.environ.get("SECRET_KEY", 'django-insecure-0)uegopfs@ni$7v!*p4(p$kjskmv8^hwa%8@%i83e@f%tzec0c')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -40,9 +37,9 @@ INSTALLED_APPS = [
     'corsheaders',
     'django.contrib.postgres',
     'django_filters',
-    'psqlextra',
     'turnover_atlas.apps.TurnoverAtlasConfig',
     'rest_framework',
+    'dbbackup'
 ]
 
 MIDDLEWARE = [
@@ -83,7 +80,7 @@ WSGI_APPLICATION = 'ta.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'psqlextra.backend',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('POSTGRES_DB', 'postgres'),
         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
@@ -165,6 +162,23 @@ CORS_ALLOW_HEADERS = [
     "withCredentials",
     "http_x_xsrf_token"
 ]
-CORS_ORIGIN_WHITELIST = (
-    'http://localhost:4200',
-)
+CORS_ORIGIN_WHITELIST = os.environ.get("CORS_ORIGIN_WHITELIST", "http://localhost:4200").split(",")
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost").split(",")
+
+DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {
+    "location": os.environ.get("BACKUP_DIR", "/backups")
+}
+
+DBBACKUP_CONNECTORS = {
+    'default': {
+        'dump_cmd': 'pg_dump --no-owner --no-acl --no-privileges',
+        'restore_cmd': 'pg_restore --no-owner --no-acl --no-privileges',
+    }
+}
+
+REDIS_HOST = os.environ.get("REDIS_HOST", "redis")
+REDIS_PORT = os.environ.get("REDIS_PORT", "6379")
+REDIS_DB = os.environ.get("REDIS_DB", "0")
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD", "")
+REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"

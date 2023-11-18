@@ -20,7 +20,7 @@ from turnover_atlas.validation import turnover_data_schema, accession_id_map_sch
 class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
     queryset = TurnoverData.objects.all()
     serializer_class = TurnoverDataSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.OrderingFilter,)
     ordering_fields = ('id', 'Protein_Group', 'Genes')
     ordering = ('id',)
@@ -98,13 +98,13 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
 class TurnoverAtlasDataValueViewSets(viewsets.ModelViewSet):
     queryset = TurnoverDataValue.objects.all()
     serializer_class = TurnoverDataValueSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
 
 
 class AccessionIDMapViewSets(FiltersMixin, viewsets.ModelViewSet):
     queryset = AccessionIDMap.objects.all()
     serializer_class = AccessionIDMapSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.OrderingFilter,)
     ordering_fields = ('id', 'Protein_Group', 'Genes')
     ordering = ('Protein_Group',)
@@ -143,9 +143,7 @@ class AccessionIDMapViewSets(FiltersMixin, viewsets.ModelViewSet):
 class SampleGroupMetadataViewSets(FiltersMixin, viewsets.ModelViewSet):
     queryset = SampleGroupMetadata.objects.all()
     serializer_class = SampleGroupMetadataSerializer
-    permission_classes = (permissions.AllowAny,)
-
-
+    permission_classes = (permissions.IsAuthenticated,)
     pagination_class = tpagination.CursorPage
 
 
@@ -165,7 +163,7 @@ class ModelParametersViewSets(FiltersMixin, viewsets.ModelViewSet):
 class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
     queryset = ProteinSequence.objects.all()
     serializer_class = ProteinSequenceSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.OrderingFilter,)
     ordering_fields = ('id', 'AccessionID')
     ordering = ('AccessionID',)

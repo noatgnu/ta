@@ -22,6 +22,7 @@ from turnover_atlas.viewsets import TurnoverAtlasDataViewSets, TurnoverAtlasData
 from turnover_atlas.views import AvailableTissues, ModelData
 
 router = routers.DefaultRouter()
+from rest_framework.authtoken import views
 
 router.register(r'api/turnoverdata', TurnoverAtlasDataViewSets)
 router.register(r'api/turnoverdatavalue', TurnoverAtlasDataValueViewSets)
@@ -34,4 +35,5 @@ urlpatterns = [
     path('api/tissue/', AvailableTissues.as_view(), name='tissue'),
     path('api/modelling/', ModelData.as_view(), name='modelling'),
     path('admin/', admin.site.urls),
+    path('api-token-auth/', views.obtain_auth_token)
 ]

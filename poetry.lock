@@ -388,6 +388,24 @@ publish = ["build (==0.7.0)", "twine (==3.7.1)"]
 test = ["coveralls (==3.3.0)", "dj-database-url (==0.5.0)", "freezegun (==1.1.0)", "psycopg2 (>=2.8.4,<3.0.0)", "pytest (==6.2.5)", "pytest-benchmark (==3.4.1)", "pytest-cov (==3.0.0)", "pytest-django (==4.4.0)", "snapshottest (==0.6.0)", "tox (==3.24.4)"]
 
 [[package]]
+name = "django-redis"
+version = "5.4.0"
+description = "Full featured redis cache backend for Django."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "django-redis-5.4.0.tar.gz", hash = "sha256:6a02abaa34b0fea8bf9b707d2c363ab6adc7409950b2db93602e6cb292818c42"},
+    {file = "django_redis-5.4.0-py3-none-any.whl", hash = "sha256:ebc88df7da810732e2af9987f7f426c96204bf89319df4c6da6ca9a2942edd5b"},
+]
+
+[package.dependencies]
+Django = ">=3.2"
+redis = ">=3,<4.0.0 || >4.0.0,<4.0.1 || >4.0.1"
+
+[package.extras]
+hiredis = ["redis[hiredis] (>=3,!=4.0.0,!=4.0.1)"]
+
+[[package]]
 name = "djangorestframework"
 version = "3.14.0"
 description = "Web APIs for Django, made easy."
@@ -1100,4 +1118,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "541272b23136df549aadc3e84e5fdec90cf8486e39f87cefc9248dd85e49dec0"
+content-hash = "ee812b9aba1f130f1c17742b2a0e3eb962451a518ccb55354f0048fa8b641ec0"

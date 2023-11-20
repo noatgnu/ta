@@ -174,6 +174,7 @@ class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return ProteinSequence.objects.all()
 
+    @method_decorator(cache_page(60 * 60*24*7))
     @action(detail=False, methods=['get'])
     #@method_decorator(cache_page(60 * 60 * 24 * 7))
     def get_coverage(self, request, pk=None):

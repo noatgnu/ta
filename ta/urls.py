@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.decorators.cache import cache_page
 from rest_framework import routers
 from turnover_atlas.viewsets import TurnoverAtlasDataViewSets, TurnoverAtlasDataValueViewSets, AccessionIDMapViewSets, \
     SampleGroupMetadataViewSets, ModelParametersViewSets, ProteinSequenceViewSets

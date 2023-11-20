@@ -4,16 +4,16 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from filters.mixins import FiltersMixin
-from rest_framework import viewsets, permissions, renderers, pagination, filters, status
+from rest_framework import viewsets, permissions, renderers, pagination, filters, status, parsers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from turnover_atlas import pagination as tpagination
 from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters, \
-    ProteinSequence
+    ProteinSequence, Session
 from turnover_atlas.ordering_filter import CustomOrderingFilter
 from turnover_atlas.serializers import TurnoverDataSerializer, TurnoverDataValueSerializer, AccessionIDMapSerializer, \
-    SampleGroupMetadataSerializer, ModelParametersSerializer, ProteinSequenceSerializer
+    SampleGroupMetadataSerializer, ModelParametersSerializer, ProteinSequenceSerializer, SessionSerializer
 from turnover_atlas.utils import func_kpool, func_pulse
 from turnover_atlas.validation import turnover_data_schema, accession_id_map_schema
 
@@ -200,3 +200,50 @@ class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
             return Response({"coverage": pos_dict, "turnover_data": data, "protein_sequence": protein_sequence.Sequence})
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class SessionViewSets(viewsets.ModelViewSet):
+    queryset = Session.objects.all()
+    parser_classes = (parsers.MultiPartParser, parsers.JSONParser)
+    serializer_class = SessionSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    filter_backends = (filters.OrderingFilter,)
+    ordering_fields = ('id',)
+    ordering = ('id',)
+    filter_mappings = {
+        "id": "id__exact",
+        "user_id": "user_id__exact",
+    }
+
+    def get_queryset(self):
+        return self.queryset
+
+
+    def create(self, request, *args, **kwargs):
+        current_user = request.user
+        session = Session.objects.create(user=current_user, name=request.data["name"], details=request.data["details"], protein_group=request.data["protein_group"])
+        session.save()
+        return Response(status=status.HTTP_201_CREATED)
+
+    def update(self, request, pk=None, **kwargs):
+        session = self.get_object()
+        session.name = request.data['name']
+        session.details = request.data['details']
+        session.protein_group = request.data['protein_group']
+        session.save()
+        return Response(status=status.HTTP_200_OK)
+
+    def destroy(self, request, pk=None, **kwargs):
+        current_user = request.user
+        session = self.get_object()
+        if session.user != current_user:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        session.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'])
+    def user_only(self, request, pk=None):
+        current_user = request.user
+        queryset = Session.objects.filter(user=current_user)
+        json_data = SessionSerializer(queryset, many=True).data
+        return Response(json_data)

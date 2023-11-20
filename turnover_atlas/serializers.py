@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters, \
-    ProteinSequence
+    ProteinSequence, Session
 
 
 class TurnoverDataSerializer(serializers.ModelSerializer):
@@ -100,4 +100,15 @@ class ProteinSequenceSerializer(serializers.ModelSerializer):
             'id',
             'AccessionID',
             'Sequence',
+        )
+
+class SessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Session
+        fields = (
+            'id',
+            'name',
+            'details',
+            'protein_group',
+            'created'
         )

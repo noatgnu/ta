@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -137,8 +138,21 @@ class ProteinSequence(models.Model):
         ordering = ["AccessionID"]
 
 
+class Session(models.Model):
+    details = models.JSONField(blank=True, null=True)
+    name = models.TextField(blank=True, null=True)
+    protein_group = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="protein_sessions", blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = "turnover_atlas"
+        ordering = ["id"]
+
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:
         Token.objects.create(user=instance)
+
+

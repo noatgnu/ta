@@ -19,7 +19,7 @@ from django.urls import path, include
 from django.views.decorators.cache import cache_page
 from rest_framework import routers
 from turnover_atlas.viewsets import TurnoverAtlasDataViewSets, TurnoverAtlasDataValueViewSets, AccessionIDMapViewSets, \
-    SampleGroupMetadataViewSets, ModelParametersViewSets, ProteinSequenceViewSets
+    SampleGroupMetadataViewSets, ModelParametersViewSets, ProteinSequenceViewSets, SessionViewSets
 from turnover_atlas.views import AvailableTissues, ModelData
 
 router = routers.DefaultRouter()
@@ -31,6 +31,7 @@ router.register(r'api/accessionmap', AccessionIDMapViewSets)
 router.register(r'api/samplegroupmetadata', SampleGroupMetadataViewSets)
 router.register(r'api/modelparameters', ModelParametersViewSets)
 router.register(r'api/proteinsequence', ProteinSequenceViewSets)
+router.register(r'api/session', SessionViewSets)
 urlpatterns = [
     path('', include(router.urls)),
     path('api/tissue/', AvailableTissues.as_view(), name='tissue'),

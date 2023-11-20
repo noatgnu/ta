@@ -20,6 +20,7 @@ django-dbbackup = "^4.0.2"
 gunicorn = "^21.2.0"
 whitenoise = "^6.6.0"
 hiredis = "^2.2.3"
+redis = "^5.0.1"
 
 [build-system]
 requires = ["poetry-core"]

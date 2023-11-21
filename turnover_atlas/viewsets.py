@@ -150,7 +150,7 @@ class SampleGroupMetadataViewSets(FiltersMixin, viewsets.ModelViewSet):
 class ModelParametersViewSets(FiltersMixin, viewsets.ModelViewSet):
     queryset = ModelParameters.objects.all()
     serializer_class = ModelParametersSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.OrderingFilter,)
     ordering_fields = ('id', 'Engine', 'Tissue')
     ordering = ('id',)

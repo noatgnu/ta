@@ -8,7 +8,7 @@ from turnover_atlas.utils import func_pulse, func_kpool
 
 
 class AvailableTissues(APIView):
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, format=None):
         """Get all unique tissues from TurnoverData Tissue field"""
@@ -17,7 +17,7 @@ class AvailableTissues(APIView):
 
 
 class ModelData(APIView):
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     def post(self, request, format=None):
         engine = self.request.data["Engine"]
@@ -65,4 +65,27 @@ class ModelData(APIView):
                 "pulse": []
             })
 
-
+    def get(self, request, format=None):
+        step = request.query_params.get("step", 5)
+        tissue = request.query_params.get("tissue", None)
+        engine = request.query_params.get("engine", None)
+        start = request.query_params.get("start", 0)
+        end = request.query_params.get("end", 50)
+        params = ModelParameters.objects.filter(Engine=engine, Tissue=tissue).first()
+        kpool = []
+        if params is not None:
+            for t in range(int(start), int(end), int(step)):
+                value = func_kpool(t, params.a, params.b, params.r)
+                if pd.isnull(value):
+                    continue
+                if np.isinf(value):
+                    value = 1.0
+                data = {"value": value, "day": t}
+                kpool.append(data)
+            return Response({
+                "kpool": kpool,
+            })
+        else:
+            return Response({
+                "kpool": [],
+            })

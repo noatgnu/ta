@@ -21,7 +21,7 @@ class Command(BaseCommand):
             ModelParameters.objects.all().delete()
             for i, r in data.iterrows():
                 kpool = []
-                for i in range(0, options['days']+1, 5):
+                for i in range(0, options['days']+1, 1):
                     value = func_kpool(i, r["a"], r["b"], r["r"])
                     if pd.isnull(value):
                         continue

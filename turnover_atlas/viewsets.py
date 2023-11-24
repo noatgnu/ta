@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,7 +8,6 @@ from filters.mixins import FiltersMixin
 from rest_framework import viewsets, permissions, renderers, pagination, filters, status, parsers
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
 from turnover_atlas import pagination as tpagination
 from turnover_atlas.models import TurnoverData, TurnoverDataValue, AccessionIDMap, SampleGroupMetadata, ModelParameters, \
     ProteinSequence, Session
@@ -94,6 +94,56 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
                 results.append({"Data": pulse, "Tissue": tissue, "Engine": engine, "Precursor_Id": i.Precursor_Id})
 
         return Response(results)
+
+    @method_decorator(cache_page(60 * 60 * 24 * 7))
+    @action(detail=False, methods=['get'])
+    def get_stats(self, request, pk=None):
+        include_shared = self.request.query_params.get('include_shared', "False")
+        groupby = self.request.query_params.get('groupby', "Tissue,Engine")
+        valid_tau = self.request.query_params.get("valid_tau", "True")
+        distinct = self.request.query_params.get('distinct', None)
+        groupby = groupby.split(",")
+        data = TurnoverData.objects.all()
+
+        if include_shared == "False":
+            data = data.filter(~Q(Protein_Ids__contains=";"))
+        if valid_tau == "True":
+            data = data.filter(tau_POI__isnull=False)
+        if distinct is not None:
+            group = groupby+[distinct]
+            turnover_data = data.values(*group).order_by(distinct).distinct(distinct)
+            df = pd.DataFrame([i for i in turnover_data])
+            rename = {}
+            rename[distinct] = "n"
+            turnover_data = df.groupby(groupby).count().reset_index().rename(columns=rename).to_dict(orient="records")
+            return Response(turnover_data)
+
+        else:
+            turnover_data = data.values(*groupby).annotate(n=Count('pk')).order_by(*groupby)
+
+            return Response([i for i in turnover_data])
+
+    @method_decorator(cache_page(60 * 60 * 24 * 7))
+    @action(detail=False, methods=['get'])
+    def get_histogram(self, request, pk=None):
+        include_shared = self.request.query_params.get('include_shared', "False")
+
+        data = TurnoverData.objects.all().filter(tau_POI__isnull=False)
+        if include_shared == "False":
+            data = data.filter(~Q(Protein_Ids__contains=";"))
+        data = data.values("Tissue", "Engine", "tau_POI")
+        df = pd.DataFrame(data)
+        results = []
+        df["tau_POI"] = np.log2(df["tau_POI"])
+        result = np.histogram(df["tau_POI"],30)
+        data = {"Tissue": "all", "Engine": "all", "value": list(result[0]), "bins": list(result[1])}
+        results.append(data)
+        for i, d in df.groupby(["Tissue", "Engine"]):
+            result = np.histogram(d["tau_POI"],30)
+            data = {"Tissue": i[0], "Engine": i[1], "value": list(result[0]), "bins": list(result[1])}
+            results.append(data)
+        return Response(results)
+
 
 class TurnoverAtlasDataValueViewSets(viewsets.ModelViewSet):
     queryset = TurnoverDataValue.objects.all()

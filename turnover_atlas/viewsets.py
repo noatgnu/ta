@@ -64,7 +64,11 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def get_modelling_data(self, request, pk=None):
         filter_ids = self.request.data["ids"]
-        turnover_data = TurnoverData.objects.filter(tau_POI__isnull=False, id__in=filter_ids)
+        tau_POI_valid = self.request.query_params.get("valid_tau", "True")
+        if tau_POI_valid == "True":
+            turnover_data = TurnoverData.objects.filter(tau_POI__isnull=False, id__in=filter_ids)
+        else:
+            turnover_data = TurnoverData.objects.filter(id__in=filter_ids)
         results = []
         for i in turnover_data:
             engine = i.Engine
@@ -143,6 +147,34 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
             data = {"Tissue": i[0], "Engine": i[1], "value": list(result[0]), "bins": list(result[1])}
             results.append(data)
         return Response(results)
+
+    @action(methods=['get'], detail=False)
+    def get_summary(self, request, pk=None):
+        Protein_Group = self.request.query_params.get("Protein_Group", None)
+        if Protein_Group == None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        data = TurnoverData.objects.filter(Protein_Group__exact=Protein_Group).values("Tissue", "Engine", "AverageRSS", "HalfLife_POI")
+        df = pd.DataFrame(data)
+        result = []
+        for i, g in df.groupby(["Tissue", "Engine"]):
+            print(g)
+            x = g[pd.notnull(g["HalfLife_POI"])]
+            averagerss_med = x["AverageRSS"].median()
+            halflife_poi_med = x["HalfLife_POI"].median()
+            valid_peptide = x.shape[0]
+            if pd.notnull(halflife_poi_med):
+                result.append({"Tissue": i[0], "Engine": i[1], "AverageRSS_Median": averagerss_med, "HalfLife_POI_Median": halflife_poi_med, "Peptides": valid_peptide})
+        df2 = pd.DataFrame(result)
+        df3 = df2.set_index(["Tissue", "Engine"]).unstack()
+        # flatten column index
+        df3.columns = ["_".join(i) for i in df3.columns]
+        df3.reset_index(inplace=True)
+        return Response(df3.to_dict(orient="records"))
+
+            
+        
+
+
 
 
 class TurnoverAtlasDataValueViewSets(viewsets.ModelViewSet):
@@ -228,11 +260,11 @@ class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     #@method_decorator(cache_page(60 * 60 * 24 * 7))
     def get_coverage(self, request, pk=None):
-        valid_tau = self.request.query_params.get('valid_tau', None)
+        valid_tau = self.request.query_params.get('valid_tau', "True")
 
         protein_sequence = ProteinSequence.objects.get(AccessionID=self.request.query_params.get('AccessionID', None))
         if protein_sequence is not None:
-            if valid_tau is not None:
+            if valid_tau == "True":
                 turnover_data = TurnoverData.objects.filter(Protein_Group=protein_sequence.AccessionID, tau_POI__isnull=False)
             else:
                 turnover_data = TurnoverData.objects.filter(Protein_Group=protein_sequence.AccessionID)

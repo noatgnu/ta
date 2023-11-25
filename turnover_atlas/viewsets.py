@@ -163,19 +163,13 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
             halflife_poi_med = x["HalfLife_POI"].median()
             valid_peptide = x.shape[0]
             if pd.notnull(halflife_poi_med):
-                result.append({"Tissue": i[0], "Engine": i[1], "AverageRSS_Median": averagerss_med, "HalfLife_POI_Median": halflife_poi_med, "Peptides": valid_peptide})
+                result.append({"Tissue": i[0], "Engine": i[1], "AvgRSSMedian": averagerss_med, "HLMedian": halflife_poi_med, "Peptides": valid_peptide, "AllPeptides": g.shape[0]})
         df2 = pd.DataFrame(result)
         df3 = df2.set_index(["Tissue", "Engine"]).unstack()
         # flatten column index
         df3.columns = ["_".join(i) for i in df3.columns]
         df3.reset_index(inplace=True)
         return Response(df3.to_dict(orient="records"))
-
-            
-        
-
-
-
 
 class TurnoverAtlasDataValueViewSets(viewsets.ModelViewSet):
     queryset = TurnoverDataValue.objects.all()

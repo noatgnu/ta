@@ -265,16 +265,20 @@ class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
                 turnover_data = TurnoverData.objects.filter(Protein_Group=protein_sequence.AccessionID)
             a = sorted(turnover_data, key=lambda x: len(x.Stripped_Sequence), reverse=True)
             pos_dict = {}
+            start_pos = {}
+            end_pos = {}
             for i in a:
                 i2 = protein_sequence.Sequence.index(i.Stripped_Sequence)
+                start_pos[i.id] = i2
+                end_pos[i.id] = i2+len(i.Stripped_Sequence)
                 for i3 in range(len(i.Stripped_Sequence)):
                     if i2+i3 not in pos_dict:
                         pos_dict[i2+i3] = []
                     pos_dict[i2+i3].append(i.id)
             data = {}
             for i in turnover_data:
-                data[i.id] = {"id": i.id, "Precursor_Id": i.Precursor_Id, "Tissue": i.Tissue, "Engine": i.Engine, "tau_POI": i.tau_POI, "HalfLife_POI": i.HalfLife_POI, "Stripped_Sequence": i.Stripped_Sequence}
-            print(data)
+                data[i.id] = {"id": i.id, "Start_Pos": start_pos[i.id], "End_Pos": end_pos[i.id], "Precursor_Id": i.Precursor_Id, "Tissue": i.Tissue, "Engine": i.Engine, "tau_POI": i.tau_POI, "HalfLife_POI": i.HalfLife_POI, "Stripped_Sequence": i.Stripped_Sequence}
+
             return Response({"coverage": pos_dict, "turnover_data": data, "protein_sequence": protein_sequence.Sequence})
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)

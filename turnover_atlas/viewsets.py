@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_page, never_cache
 from django_filters.rest_framework import DjangoFilterBackend
 from filters.mixins import FiltersMixin
 from rest_framework import viewsets, permissions, renderers, pagination, filters, status, parsers
@@ -164,7 +164,7 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
             halflife_poi_sd = x["HalfLife_POI"].std()
             valid_peptide = x.shape[0]
             if pd.notnull(halflife_poi_med):
-                result.append({"Tissue": i[0], "Engine": i[1], "AvgRSSMedian": averagerss_med, "HLMedian": halflife_poi_med, "AvgRSSsd": averagerss_sd, "HLsd": halflife_poi_sd, "Peptides": valid_peptide, "AllPeptides": g.shape[0]})
+                result.append({"Tissue": i[0], "Engine": i[1], "AvgRSSMedian": round(averagerss_med, 4), "HLMedian": round(halflife_poi_med, 4), "AvgRSSsd": round(averagerss_sd, 4), "HLsd": round(halflife_poi_sd, 4), "Peptides": valid_peptide, "AllPeptides": g.shape[0]})
         df2 = pd.DataFrame(result)
         df3 = df2.set_index(["Tissue", "Engine"]).unstack()
         # flatten column index
@@ -251,7 +251,7 @@ class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return ProteinSequence.objects.all()
 
-    @method_decorator(cache_page(60 * 60*24*7))
+    #@method_decorator(cache_page(60 * 60*24*7))
     @action(detail=False, methods=['get'])
     #@method_decorator(cache_page(60 * 60 * 24 * 7))
     def get_coverage(self, request, pk=None):
@@ -273,7 +273,8 @@ class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
                     pos_dict[i2+i3].append(i.id)
             data = {}
             for i in turnover_data:
-                data[i.id] = {"id": i.id, "Precursor_Id": i.Precursor_Id, "Tissue": i.Tissue, "Engine": i.Engine, "tau_POI": i.tau_POI, "Stripped_Sequence": i.Stripped_Sequence}
+                data[i.id] = {"id": i.id, "Precursor_Id": i.Precursor_Id, "Tissue": i.Tissue, "Engine": i.Engine, "tau_POI": i.tau_POI, "HalfLife_POI": i.HalfLife_POI, "Stripped_Sequence": i.Stripped_Sequence}
+            print(data)
             return Response({"coverage": pos_dict, "turnover_data": data, "protein_sequence": protein_sequence.Sequence})
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)

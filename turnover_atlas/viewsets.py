@@ -157,13 +157,14 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
         df = pd.DataFrame(data)
         result = []
         for i, g in df.groupby(["Tissue", "Engine"]):
-            print(g)
             x = g[pd.notnull(g["HalfLife_POI"])]
             averagerss_med = x["AverageRSS"].median()
+            averagerss_sd = x["AverageRSS"].std()
             halflife_poi_med = x["HalfLife_POI"].median()
+            halflife_poi_sd = x["HalfLife_POI"].std()
             valid_peptide = x.shape[0]
             if pd.notnull(halflife_poi_med):
-                result.append({"Tissue": i[0], "Engine": i[1], "AvgRSSMedian": averagerss_med, "HLMedian": halflife_poi_med, "Peptides": valid_peptide, "AllPeptides": g.shape[0]})
+                result.append({"Tissue": i[0], "Engine": i[1], "AvgRSSMedian": averagerss_med, "HLMedian": halflife_poi_med, "AvgRSSsd": averagerss_sd, "HLsd": halflife_poi_sd, "Peptides": valid_peptide, "AllPeptides": g.shape[0]})
         df2 = pd.DataFrame(result)
         df3 = df2.set_index(["Tissue", "Engine"]).unstack()
         # flatten column index

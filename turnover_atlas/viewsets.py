@@ -134,7 +134,7 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
 
         data = TurnoverData.objects.all().filter(tau_POI__isnull=False)
         if include_shared == "False":
-            data = data.filter(~Q(Protein_Ids__contains=";"))
+            data = data.filter(~Q(Protein_Group__contains=";"))
         data = data.values("Tissue", "Engine", "tau_POI")
         df = pd.DataFrame(data)
         results = []
@@ -143,10 +143,27 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
         data = {"Tissue": "all", "Engine": "all", "value": list(result[0]), "bins": list(result[1])}
         results.append(data)
         for i, d in df.groupby(["Tissue", "Engine"]):
-            result = np.histogram(d["tau_POI"],30)
+            result = np.histogram(d["tau_POI"],result[1])
             data = {"Tissue": i[0], "Engine": i[1], "value": list(result[0]), "bins": list(result[1])}
             results.append(data)
         return Response(results)
+
+    @action(detail=False, methods=['get'])
+    def get_violin(self, request, pk=None):
+        include_shared = self.request.query_params.get('include_shared', "False")
+        valid_tau = self.request.query_params.get("valid_tau", "True")
+        data = TurnoverData.objects.all()
+        if include_shared == "False":
+            data = data.filter(~Q(Protein_Group__contains=";"))
+        if valid_tau == "True":
+            data = data.filter(tau_POI__isnull=False)
+        data = TurnoverData.objects.all().filter(tau_POI__isnull=False)
+        # get day 0 data for each tissue and engine combination
+        data = data.filter(values__Sample_Name__in=SampleGroupMetadata.objects.filter(Days=0).values_list("Sample_Name", flat=True))
+        # construct plotly js violin plot object for each tissue and engine combination using peptide day 0 data
+        results = []
+
+
 
     @action(methods=['get'], detail=False)
     def get_summary(self, request, pk=None):

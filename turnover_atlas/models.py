@@ -149,7 +149,6 @@ class Session(models.Model):
         app_label = "turnover_atlas"
         ordering = ["id"]
 
-
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
     if created:

@@ -127,7 +127,7 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
 
             return Response([i for i in turnover_data])
 
-    #@method_decorator(cache_page(60 * 60 * 24 * 7))
+    @method_decorator(cache_page(60 * 60 * 24 * 7))
     @action(detail=False, methods=['get'])
     def get_histogram(self, request, pk=None):
         include_shared = self.request.query_params.get('include_shared', "False")

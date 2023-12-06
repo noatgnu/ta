@@ -127,7 +127,7 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
 
             return Response([i for i in turnover_data])
 
-    @method_decorator(cache_page(60 * 60 * 24 * 7))
+    #@method_decorator(cache_page(60 * 60 * 24 * 7))
     @action(detail=False, methods=['get'])
     def get_histogram(self, request, pk=None):
         include_shared = self.request.query_params.get('include_shared', "False")
@@ -135,15 +135,15 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
         data = TurnoverData.objects.all().filter(tau_POI__isnull=False)
         if include_shared == "False":
             data = data.filter(~Q(Protein_Group__contains=";"))
-        data = data.values("Tissue", "Engine", "tau_POI")
+        data = data.values("Tissue", "Engine", "HalfLife_POI")
         df = pd.DataFrame(data)
         results = []
-        df["tau_POI"] = np.log2(df["tau_POI"])
-        result = np.histogram(df["tau_POI"],30)
+        df["HalfLife_POI"] = df["HalfLife_POI"]
+        result = np.histogram(df["HalfLife_POI"],30)
         data = {"Tissue": "all", "Engine": "all", "value": list(result[0]), "bins": list(result[1])}
         results.append(data)
         for i, d in df.groupby(["Tissue", "Engine"]):
-            result = np.histogram(d["tau_POI"],result[1])
+            result = np.histogram(d["HalfLife_POI"],result[1])
             data = {"Tissue": i[0], "Engine": i[1], "value": list(result[0]), "bins": list(result[1])}
             results.append(data)
         return Response(results)
@@ -187,6 +187,7 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
         # flatten column index
         df3.columns = ["_".join(i) for i in df3.columns]
         df3.reset_index(inplace=True)
+        df3.fillna('', inplace=True)
         return Response(df3.to_dict(orient="records"))
 
 class TurnoverAtlasDataValueViewSets(viewsets.ModelViewSet):

@@ -65,10 +65,18 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
     def get_modelling_data(self, request, pk=None):
         filter_ids = self.request.data["ids"]
         tau_POI_valid = self.request.query_params.get("valid_tau", "True")
+        average_rss = self.request.query_params.get("average_rss", None)
+        rss = self.request.query_params.get("rss", None)
         if tau_POI_valid == "True":
             turnover_data = TurnoverData.objects.filter(tau_POI__isnull=False, id__in=filter_ids)
         else:
             turnover_data = TurnoverData.objects.filter(id__in=filter_ids)
+        if average_rss is not None:
+            turnover_data = turnover_data.filter(AverageRSS__lte=average_rss)
+
+        if rss is not None:
+            turnover_data = turnover_data.filter(rss__lte=rss)
+
         results = []
         for i in turnover_data:
             engine = i.Engine
@@ -168,9 +176,18 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
     @action(methods=['get'], detail=False)
     def get_summary(self, request, pk=None):
         Protein_Group = self.request.query_params.get("Protein_Group", None)
+        average_rss = self.request.query_params.get("average_rss", None)
+        rss = self.request.query_params.get("rss", None)
+
         if Protein_Group == None:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        data = TurnoverData.objects.filter(Protein_Group__exact=Protein_Group).values("Tissue", "Engine", "AverageRSS", "HalfLife_POI")
+
+        data = TurnoverData.objects.filter(Protein_Group__exact=Protein_Group)
+        if average_rss is not None:
+            data = data.filter(AverageRSS__lte=average_rss)
+        if rss is not None:
+            data = data.filter(rss__lte=rss)
+        data = data.values("Tissue", "Engine", "AverageRSS", "HalfLife_POI")
         df = pd.DataFrame(data)
         result = []
         for i, g in df.groupby(["Tissue", "Engine"]):
@@ -254,6 +271,9 @@ class ModelParametersViewSets(FiltersMixin, viewsets.ModelViewSet):
         "Tissue": "Tissue__exact",
     }
 
+    def get_queryset(self):
+        return self.queryset
+
 
 class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
     queryset = ProteinSequence.objects.all()
@@ -274,13 +294,19 @@ class ProteinSequenceViewSets(FiltersMixin, viewsets.ModelViewSet):
     #@method_decorator(cache_page(60 * 60 * 24 * 7))
     def get_coverage(self, request, pk=None):
         valid_tau = self.request.query_params.get('valid_tau', "True")
-
+        average_rss = self.request.query_params.get("average_rss", None)
+        rss = self.request.query_params.get("rss", None)
         protein_sequence = ProteinSequence.objects.get(AccessionID=self.request.query_params.get('AccessionID', None))
+
         if protein_sequence is not None:
             if valid_tau == "True":
                 turnover_data = TurnoverData.objects.filter(Protein_Group=protein_sequence.AccessionID, tau_POI__isnull=False)
             else:
                 turnover_data = TurnoverData.objects.filter(Protein_Group=protein_sequence.AccessionID)
+            if average_rss is not None:
+                turnover_data = turnover_data.filter(AverageRSS__lte=average_rss)
+            if rss is not None:
+                turnover_data = turnover_data.filter(rss__lte=rss)
             a = sorted(turnover_data, key=lambda x: len(x.Stripped_Sequence), reverse=True)
             pos_dict = {}
             start_pos = {}

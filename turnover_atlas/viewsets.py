@@ -135,15 +135,15 @@ class TurnoverAtlasDataViewSets(FiltersMixin, viewsets.ModelViewSet):
         data = TurnoverData.objects.all().filter(tau_POI__isnull=False)
         if include_shared == "False":
             data = data.filter(~Q(Protein_Group__contains=";"))
-        data = data.values("Tissue", "Engine", "HalfLife_POI")
+        data = data.values("Tissue", "Engine", "tau_POI")
         df = pd.DataFrame(data)
         results = []
-        df["HalfLife_POI"] = df["HalfLife_POI"]
-        result = np.histogram(df["HalfLife_POI"],30)
+        df["tau_POI"] = np.log2(df["tau_POI"])
+        result = np.histogram(df["tau_POI"],30)
         data = {"Tissue": "all", "Engine": "all", "value": list(result[0]), "bins": list(result[1])}
         results.append(data)
         for i, d in df.groupby(["Tissue", "Engine"]):
-            result = np.histogram(d["HalfLife_POI"],result[1])
+            result = np.histogram(d["tau_POI"],result[1])
             data = {"Tissue": i[0], "Engine": i[1], "value": list(result[0]), "bins": list(result[1])}
             results.append(data)
         return Response(results)

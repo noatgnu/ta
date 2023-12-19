@@ -26,9 +26,9 @@ class ModelData(APIView):
         tau_POI_lower_bound = self.request.data["tau_POI_lower_bound"]
         tau_POI_upper_bound = self.request.data["tau_POI_upper_bound"]
         days = self.request.data["Data"]
-        print(engine, tissue, tau_POI, tau_POI_lower_bound, tau_POI_upper_bound, days)
+        #print(engine, tissue, tau_POI, tau_POI_lower_bound, tau_POI_upper_bound, days)
         params = ModelParameters.objects.filter(Engine=engine, Tissue=tissue).first()
-        print(params)
+        #print(params)
         #calculate kpool for 5-minutes interval from 0 to 50 days where the unit is days and return a json arrays of kpool value and day value
         kpool = []
         if params is not None:
@@ -74,14 +74,18 @@ class ModelData(APIView):
         params = ModelParameters.objects.filter(Engine=engine, Tissue=tissue).first()
         kpool = []
         if params is not None:
-            for t in range(int(start), int(end), int(step)):
-                value = func_kpool(t, params.a, params.b, params.r)
+            current_day = int(start)
+            step = float(step)
+            while current_day <= int(end):
+                value = func_kpool(current_day, params.a, params.b, params.r)
                 if pd.isnull(value):
                     continue
                 if np.isinf(value):
                     value = 1.0
-                data = {"value": value, "day": t}
+                data = {"value": value, "day": current_day}
                 kpool.append(data)
+                current_day += step
+
             return Response({
                 "kpool": kpool,
             })

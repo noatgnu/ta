@@ -272,6 +272,7 @@ class ModelParametersViewSets(FiltersMixin, viewsets.ModelViewSet):
     }
 
     def get_queryset(self):
+        print(self.queryset)
         return self.queryset
 
 

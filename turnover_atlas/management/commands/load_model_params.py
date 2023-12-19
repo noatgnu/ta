@@ -21,14 +21,17 @@ class Command(BaseCommand):
             ModelParameters.objects.all().delete()
             for i, r in data.iterrows():
                 kpool = []
-                for i in range(0, options['days']+1, 1):
-                    value = func_kpool(i, r["a"], r["b"], r["r"])
+                d = 0
+                while d <= options['days']:
+                    value = func_kpool(d, r["a"], r["b"], r["r"])
                     if pd.isnull(value):
                         continue
                     if np.isinf(value):
                         value = 1.0
-                    data = {"value": value, "day": i}
+                    data = {"value": value, "day": d}
                     kpool.append(data)
+                    d += 0.5
+                print(kpool)
                 ModelParameters.objects.create(
                     a=r["a"],
                     b=r["b"],

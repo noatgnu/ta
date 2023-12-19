@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from turnover_atlas.models import TurnoverData, TurnoverDataValue, ModelParameters
 from turnover_atlas.utils import func_pulse, func_kpool
+from scipy.signal import savgol_filter
 
 
 class AvailableTissues(APIView):

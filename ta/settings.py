@@ -189,6 +189,7 @@ DBBACKUP_CONNECTORS = {
     'default': {
         'dump_cmd': 'pg_dump --no-owner --no-acl --no-privileges',
         'restore_cmd': 'pg_restore --no-owner --no-acl --no-privileges --disable-triggers',
+        'RESTORE_SUFFIX': '--if-exists'
     }
 }
 
